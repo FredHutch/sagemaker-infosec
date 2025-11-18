@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "crowdstrike-security": {
+      "command": "python",
+      "args": ["/home/sagemaker-user/mcp/crowdstrike-server.py"],
+      "description": "CrowdStrike Falcon security integration for threat detection and response",
+      "env": {
+        "AWS_REGION": "us-east-1"
+      }
+    },
+    "microsoft-security": {
+      "command": "python",
+      "args": ["/home/sagemaker-user/mcp/microsoft-security-server.py"],
+      "description": "Microsoft security tools integration (Defender, Entra, Purview)",
+      "env": {
+        "AWS_REGION": "us-east-1"
+      }
+    },
+    "proofpoint-security": {
+      "command": "python",
+      "args": ["/home/sagemaker-user/mcp/proofpoint-server.py"],
+      "description": "Proofpoint email security and TAP integration",
+      "env": {
+        "AWS_REGION": "us-east-1"
+      }
+    }
+  }
+}

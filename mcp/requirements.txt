@@ -1,0 +1,16 @@
+# MCP Server Dependencies
+mcp>=0.9.0
+boto3>=1.34.0
+requests>=2.31.0
+
+# CrowdStrike
+crowdstrike-falconpy>=1.3.0
+
+# Microsoft Security
+azure-identity>=1.15.0
+msgraph-sdk>=1.1.0
+msgraph-core>=1.0.0
+
+# Async support
+aiohttp>=3.9.0
+asyncio>=3.4.3
