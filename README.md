@@ -1,6 +1,18 @@
-# SageMaker AI for Information Security
+# Multi-Cloud AI for Information Security
 
-A comprehensive AI-powered security operations platform built on AWS SageMaker, integrating machine learning, LLM-based AI agents, and enterprise security tools for intelligent threat detection, incident response, and threat hunting.
+A comprehensive AI-powered security operations platform for **AWS SageMaker**, **Azure Machine Learning**, and **GCP Vertex AI**, integrating machine learning, LLM-based AI agents, and enterprise security tools for intelligent threat detection, incident response, and threat hunting.
+
+## 🌩️ Multi-Cloud Support
+
+Deploy on your cloud of choice - or all three:
+
+| Cloud Provider | Service | Status |
+|----------------|---------|--------|
+| **AWS** | SageMaker | ✅ Fully Supported |
+| **Azure** | Machine Learning | ✅ Fully Supported |
+| **GCP** | Vertex AI Workbench | ✅ Fully Supported |
+
+All platforms provide the same core functionality with cloud-specific optimizations. See [MULTI_CLOUD_DEPLOYMENT_GUIDE.md](MULTI_CLOUD_DEPLOYMENT_GUIDE.md) for deployment instructions.
 
 ## Overview
 
@@ -10,7 +22,8 @@ This solution provides security teams with:
 - **ML-Based Threat Hunting**: Machine learning models for anomaly detection and behavioral analysis
 - **Multi-Tool Integration**: Unified interface for CrowdStrike, Microsoft Defender/Entra/Purview, and Proofpoint
 - **MCP Protocol Support**: Modern integration with security tools via Model Context Protocol
-- **Secure Infrastructure**: VPC-isolated SageMaker Domain with IAM Identity Center authentication
+- **Multi-Cloud Deployment**: Deploy on AWS, Azure, or GCP with identical functionality
+- **Secure Infrastructure**: VPC/VNet-isolated with cloud-native authentication
 - **Interactive Notebooks**: Jupyter notebooks for exploratory analysis and automated workflows
 
 ## Architecture
@@ -84,8 +97,24 @@ This solution provides security teams with:
 
 ## Prerequisites
 
+### Choose Your Cloud Provider
+
+**AWS**:
 - AWS Account with appropriate permissions
-- IAM Identity Center configured (optional, but recommended)
+- AWS CLI configured
+- IAM Identity Center configured (optional, recommended)
+
+**Azure**:
+- Azure subscription with Owner access
+- Azure CLI (`az`) installed
+- Entra ID configured (optional, recommended)
+
+**GCP**:
+- GCP Project with Owner permissions
+- `gcloud` CLI installed
+- Billing enabled on project
+
+**All Platforms**:
 - Terraform >= 1.0
 - Security tool API credentials:
   - CrowdStrike Falcon API client ID and secret
@@ -94,7 +123,9 @@ This solution provides security teams with:
 
 ## Quick Start
 
-### 1. Configure Credentials
+### AWS Deployment
+
+#### 1. Configure Credentials
 
 Store your security tool API credentials in AWS Secrets Manager:
 
