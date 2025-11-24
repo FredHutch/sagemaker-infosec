@@ -35,6 +35,7 @@ The deployment requires permissions for:
 ### Security Tool Access
 
 You'll need API credentials for:
+- **Perplexity AI**: Enterprise API key with appropriate access
 - **CrowdStrike Falcon**: API client ID and secret with permissions for Detections, Hosts, Incidents, Intel
 - **Microsoft**: Azure AD application with permissions for:
   - Microsoft Graph API (SecurityEvents.Read.All, User.Read.All, AuditLog.Read.All)
@@ -54,6 +55,7 @@ Before starting, collect the following information:
 □ VPC CIDR Block: _______________________ (default: 10.0.0.0/16)
 □ Availability Zones: ___________________ (default: 3 AZs)
 □ IAM Identity Center Instance ARN: _______________
+□ Perplexity API Key: ___________________________
 □ CrowdStrike API Client ID: ___________________
 □ CrowdStrike API Client Secret: _______________
 □ Microsoft Tenant ID: _________________________
@@ -86,6 +88,18 @@ If not already enabled:
 ## Step-by-Step Deployment
 
 ### Phase 1: Store Credentials in Secrets Manager
+
+#### Perplexity API Credentials
+
+```bash
+aws secretsmanager create-secret \
+    --name perplexity/api-credentials \
+    --description "Perplexity AI API credentials" \
+    --secret-string '{
+        "api_key": "YOUR_PERPLEXITY_API_KEY"
+    }' \
+    --region us-east-1
+```
 
 #### CrowdStrike Credentials
 
@@ -129,7 +143,7 @@ aws secretsmanager create-secret \
 
 Verify secrets were created:
 ```bash
-aws secretsmanager list-secrets --region us-east-1 | grep -E "crowdstrike|microsoft|proofpoint"
+aws secretsmanager list-secrets --region us-east-1 | grep -E "perplexity|crowdstrike|microsoft|proofpoint"
 ```
 
 ### Phase 2: Prepare Terraform Variables
@@ -157,6 +171,7 @@ kms_key_users = [
 
 # Secrets Manager ARNs
 secrets_manager_arns = [
+    "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:perplexity/*",
     "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:crowdstrike/*",
     "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:microsoft/*",
     "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:proofpoint/*"
@@ -288,22 +303,17 @@ mkdir -p ~/.config
 cp /home/sagemaker-user/mcp/mcp-config.json ~/.config/
 ```
 
-### 5. Configure Anthropic API Key
+### 5. Verify Perplexity API Access
 
-Set up Claude AI access:
+Perplexity API credentials are automatically retrieved from AWS Secrets Manager by the CloudSecretsManager class. Verify access:
 
-```bash
-# In SageMaker Studio terminal
-echo 'export ANTHROPIC_API_KEY="your-api-key"' >> ~/.bashrc
-source ~/.bashrc
-```
+```python
+# In a SageMaker notebook
+from security_integrations.cloud_secrets import CloudSecretsManager
 
-Or create a secret in Secrets Manager:
-
-```bash
-aws secretsmanager create-secret \
-    --name anthropic/api-key \
-    --secret-string '{"api_key":"YOUR_ANTHROPIC_API_KEY"}'
+secrets_manager = CloudSecretsManager()
+perplexity_creds = secrets_manager.get_perplexity_credentials()
+print("Perplexity API key loaded successfully")
 ```
 
 ## Validation and Testing
@@ -333,6 +343,10 @@ import sys
 sys.path.append('/home/sagemaker-user/lib')
 
 from security_integrations import CrowdStrikeClient, MicrosoftSecurityClient, ProofpointClient
+from security_integrations.cloud_secrets import CloudSecretsManager
+
+# Initialize secrets manager
+secrets_manager = CloudSecretsManager()
 
 # Test CrowdStrike
 cs = CrowdStrikeClient()
@@ -348,6 +362,10 @@ print(f"Microsoft: {result['count']} alerts")
 pp = ProofpointClient()
 result = await pp.get_siem_events()
 print(f"Proofpoint: {result['total_events']} events")
+
+# Test Perplexity AI
+perplexity_creds = secrets_manager.get_perplexity_credentials()
+print(f"Perplexity API: Credentials loaded successfully")
 ```
 
 ### 3. Run Sample Notebook
@@ -356,6 +374,7 @@ print(f"Proofpoint: {result['total_events']} events")
 2. Open `incident-response-ai-assistant.ipynb`
 3. Run the first few cells to verify setup
 4. Check that data is retrieved successfully
+5. Verify AI analysis is functioning with Perplexity
 
 ## Troubleshooting
 
@@ -412,7 +431,7 @@ aws iam get-role-policy \
 
 # Test secret access
 aws secretsmanager get-secret-value \
-    --secret-id crowdstrike/api-credentials
+    --secret-id perplexity/api-credentials
 ```
 
 ### Issue: MCP Server Connection Failed
@@ -430,6 +449,27 @@ python /home/sagemaker-user/mcp/crowdstrike-server.py
 
 # Check CloudWatch logs
 aws logs tail /aws/sagemaker/infosec-ml-domain --follow
+```
+
+### Issue: Perplexity API Connection Failed
+
+**Symptom**: AI analysis fails or times out
+
+**Solutions**:
+1. Verify Perplexity API key is valid
+2. Check API rate limits and quotas
+3. Test API connectivity directly
+
+```python
+import requests
+
+api_key = "YOUR_API_KEY"
+response = requests.post(
+    "https://api.perplexity.ai/chat/completions",
+    headers={"Authorization": f"Bearer {api_key}"},
+    json={"model": "sonar-pro", "messages": [{"role": "user", "content": "test"}]}
+)
+print(response.status_code)
 ```
 
 ### Issue: High Costs
@@ -469,6 +509,7 @@ terraform destroy
 aws s3 rb s3://BUCKET-NAME --force
 
 # Delete secrets
+aws secretsmanager delete-secret --secret-id perplexity/api-credentials --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id crowdstrike/api-credentials --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id microsoft/api-credentials --force-delete-without-recovery
 aws secretsmanager delete-secret --secret-id proofpoint/api-credentials --force-delete-without-recovery
@@ -491,6 +532,7 @@ For issues or questions:
 - Check AWS Service Health Dashboard
 - Consult AWS SageMaker documentation
 - Review security tool API documentation
+- Contact Perplexity AI enterprise support
 
 ## Appendix
 
