@@ -15,7 +15,7 @@ Each deployment provides the same core functionality with cloud-specific optimiz
 ## Architecture Comparison
 
 | Feature | AWS (SageMaker) | Azure (ML) | GCP (Vertex AI) |
-|---------|-----------------|------------|-----------------|
+|---------|-----------------|------------|------------------|
 | **Compute** | SageMaker Domain | ML Workspace | Workbench Instance |
 | **Notebooks** | JupyterLab | JupyterLab | JupyterLab |
 | **Storage** | S3 | Storage Account | Cloud Storage |
@@ -32,18 +32,21 @@ Each deployment provides the same core functionality with cloud-specific optimiz
 - AWS Account with Administrator access
 - AWS CLI configured
 - Terraform >= 1.0
+- Perplexity Enterprise API key
 - (Optional) IAM Identity Center configured
 
 ### Azure
 - Azure subscription with Owner access
 - Azure CLI (`az`) installed
 - Terraform >= 1.0
+- Perplexity Enterprise API key
 - (Optional) Entra ID configured
 
 ### GCP
 - GCP Project with Owner permissions
 - `gcloud` CLI installed
 - Terraform >= 1.0
+- Perplexity Enterprise API key
 - Billing enabled on project
 
 ## Deployment Instructions
@@ -96,6 +99,14 @@ terraform output ml_workspace_endpoint
 1. **Update Key Vault Secrets**:
 ```bash
 VAULT_NAME=$(terraform output -raw key_vault_name)
+
+# Update Perplexity API credentials
+az keyvault secret set \
+    --vault-name $VAULT_NAME \
+    --name perplexity-api-credentials \
+    --value '{
+        "api_key": "YOUR_PERPLEXITY_API_KEY"
+    }'
 
 # Update CrowdStrike credentials
 az keyvault secret set \
@@ -219,6 +230,11 @@ terraform output
 # Get secret names
 gcloud secrets list
 
+# Update Perplexity API credentials
+echo '{
+    "api_key": "YOUR_PERPLEXITY_API_KEY"
+}' | gcloud secrets versions add perplexity-api-credentials-prod --data-file=-
+
 # Update CrowdStrike credentials
 echo '{
     "client_id": "YOUR_CLIENT_ID",
@@ -299,6 +315,7 @@ from security_integrations.cloud_secrets import CloudSecretsManager
 secrets = CloudSecretsManager()
 
 # Get credentials (works on all clouds)
+perplexity_creds = secrets.get_perplexity_credentials()
 crowdstrike_creds = secrets.get_crowdstrike_credentials()
 microsoft_creds = secrets.get_microsoft_credentials()
 proofpoint_creds = secrets.get_proofpoint_credentials()
@@ -359,6 +376,7 @@ Estimated monthly costs (8 hours/day usage):
 4. **Enable audit logging** for compliance
 5. **Regular security scans** of infrastructure
 6. **Principle of least privilege** for all IAM/RBAC
+7. **Rotate API keys regularly** including Perplexity API key
 
 ### Cloud-Specific
 
@@ -452,8 +470,8 @@ gsutil -m cp -r ./backup/* gs://your-gcp-bucket/
 ```
 
 2. **Update environment variables** in notebooks
-3. **Re-train models** if using cloud-specific ML services
-4. **Update secrets** in the new cloud's secrets manager
+3. **Re-configure secrets** in the new cloud's secrets manager (including Perplexity API key)
+4. **Re-train models** if using cloud-specific ML services
 
 ## Support
 
@@ -461,6 +479,7 @@ For cloud-specific issues:
 - **AWS**: AWS Support or [SageMaker documentation](https://docs.aws.amazon.com/sagemaker/)
 - **Azure**: Azure Support or [ML documentation](https://docs.microsoft.com/azure/machine-learning/)
 - **GCP**: Google Cloud Support or [Vertex AI documentation](https://cloud.google.com/vertex-ai/docs)
+- **Perplexity AI**: Enterprise support portal
 
 For platform issues, see the main [README.md](README.md).
 
@@ -468,10 +487,11 @@ For platform issues, see the main [README.md](README.md).
 
 After deployment:
 1. Open the notebooks in your cloud's ML environment
-2. Run the incident response assistant
-3. Execute threat hunting workflows
-4. Train custom ML models on your security data
-5. Set up automated monitoring and alerting
+2. Verify Perplexity AI integration is working
+3. Run the incident response assistant
+4. Execute threat hunting workflows
+5. Train custom ML models on your security data
+6. Set up automated monitoring and alerting
 
 ## Appendix: Resource Naming Conventions
 
@@ -479,11 +499,13 @@ After deployment:
 - S3: `{environment}-sagemaker-infosec-{purpose}`
 - IAM: `SageMaker{Purpose}Role-{environment}`
 - KMS: `alias/sagemaker-infosec-{environment}`
+- Secrets: `{tool}/api-credentials`
 
 ### Azure
 - Resource Group: `rg-{environment}-infosec-ml`
 - Storage: `st{environment}infosec{random}`
 - Key Vault: `kv-{environment}-infosec-{random}`
+- Secrets: `{tool}-api-credentials`
 
 ### GCP
 - Buckets: `{project-id}-{purpose}-{environment}`
