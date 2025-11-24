@@ -18,7 +18,7 @@ All platforms provide the same core functionality with cloud-specific optimizati
 
 This solution provides security teams with:
 
-- **AI-Powered Incident Response**: Automated incident triage, investigation, and response using Claude AI
+- **AI-Powered Incident Response**: Automated incident triage, investigation, and response using Perplexity AI
 - **ML-Based Threat Hunting**: Machine learning models for anomaly detection and behavioral analysis
 - **Multi-Tool Integration**: Unified interface for CrowdStrike, Microsoft Defender/Entra/Purview, and Proofpoint
 - **MCP Protocol Support**: Modern integration with security tools via Model Context Protocol
@@ -116,6 +116,7 @@ This solution provides security teams with:
 
 **All Platforms**:
 - Terraform >= 1.0
+- Perplexity Enterprise API key
 - Security tool API credentials:
   - CrowdStrike Falcon API client ID and secret
   - Microsoft Azure AD application with appropriate permissions
@@ -130,6 +131,11 @@ This solution provides security teams with:
 Store your security tool API credentials in AWS Secrets Manager:
 
 ```bash
+# Perplexity API credentials
+aws secretsmanager create-secret \
+    --name perplexity/api-credentials \
+    --secret-string '{"api_key":"YOUR_PERPLEXITY_API_KEY"}'
+
 # CrowdStrike credentials
 aws secretsmanager create-secret \
     --name crowdstrike/api-credentials \
@@ -219,7 +225,7 @@ Open `notebooks/threat-hunting-ml.ipynb` and run through the cells to:
 
 ### AI-Powered Analysis
 
-- **Claude AI Integration**: Uses Anthropic's Claude for intelligent analysis
+- **Perplexity AI Integration**: Uses Perplexity's advanced AI models for intelligent analysis
 - **Automated Triage**: AI prioritizes incidents based on risk and impact
 - **Hypothesis Generation**: AI generates threat hunting hypotheses from findings
 - **Natural Language Reports**: AI generates executive and technical reports
@@ -263,12 +269,13 @@ Open `notebooks/threat-hunting-ml.ipynb` and run through the cells to:
 - **Type Safety**: Schema-driven tool definitions
 - **Maintainability**: Cleaner separation of concerns
 
-### Why Claude AI?
+### Why Perplexity AI?
 
-- **Context Window**: Large context for analyzing complex security data
-- **Reasoning**: Strong analytical and reasoning capabilities
-- **Safety**: Built-in safety features for security use cases
-- **Speed**: Fast response times for interactive use
+- **Enterprise Focus**: Built for enterprise use cases with dedicated support
+- **Real-time Knowledge**: Access to current information for threat intelligence
+- **API Reliability**: Robust API with high uptime guarantees
+- **Security**: Enterprise-grade security and compliance features
+- **Cost Efficiency**: Competitive pricing for high-volume security operations
 
 ## Security Considerations
 
@@ -406,7 +413,7 @@ This project is provided as-is for educational and professional use.
 
 ## Acknowledgments
 
-- Anthropic for Claude AI
+- Perplexity AI for enterprise AI capabilities
 - AWS for SageMaker platform
 - Security tool vendors for API access
 - MCP protocol specification contributors
